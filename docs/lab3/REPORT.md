@@ -26,27 +26,27 @@
 ```mermaid
 graph TD
     subgraph Client_Layer [Client Layer]
-        UI[Web UI - Vanilla JS]
+        UI["Web UI - Vanilla JS"]
     end
 
     subgraph API_Gateway [Gateway]
-        Proxy[Nginx Proxy]
+        Proxy["Nginx Proxy"]
     end
 
     subgraph Auth_Service_Cluster [Auth Microservice - FastAPI]
-        AuthAPI[Auth API]
-        AuthDB[(PostgreSQL Auth)]
+        AuthAPI["Auth API"]
+        AuthDB[("PostgreSQL Auth")]
     end
 
     subgraph Core_Service_Cluster [Core Microservice - Django]
-        CoreAPI[Core API]
-        CoreDB[(PostgreSQL Core)]
-        Workers[Celery Workers]
+        CoreAPI["Core API"]
+        CoreDB[("PostgreSQL Core")]
+        Workers["Celery Workers"]
     end
 
     subgraph Message_Broker [Infrastructure]
-        Kafka{Kafka Bus}
-        Redis[(Redis Queue)]
+        Kafka{"Kafka Bus"}
+        Redis[("Redis Queue")]
     end
 
     UI --> Proxy
@@ -56,14 +56,14 @@ graph TD
     AuthAPI <--> AuthDB
     CoreAPI <--> CoreDB
     
-    CoreAPI -- Task Queue --> Redis
+    CoreAPI --|Task Queue| Redis
     Redis --> Workers
     
-    AuthAPI -- Events --> Kafka
-    CoreAPI -- Events --> Kafka
+    AuthAPI --|Events| Kafka
+    CoreAPI --|Events| Kafka
     
-    CoreAPI -.-> AuthAPI : JWT Verification
-    Workers --> SMTP[Email Service]
+    CoreAPI -.->|JWT Verification| AuthAPI
+    Workers --> SMTP["Email Service"]
 ```
 
 ---
