@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Service</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav id="navbar" class="navbar hidden">
+            <div class="nav-container">
+                <div class="nav-brand">Auth Service</div>
+                <div class="nav-menu">
+                    <button class="nav-link" onclick="showMyProfile()">Мой профиль</button>
+                    <button class="nav-link admin-only hidden" onclick="showUsers()">Пользователи</button>
+                    <button class="nav-link" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="screen">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <h1 class="auth-title">Добро пожаловать</h1>
+
+                    <!-- Login Form -->
+                    <div id="login-form" class="auth-form">
+                        <h2>Вход</h2>
+                        <form onsubmit="handleLogin(event)">
+                            <div class="form-group">
+                                <label for="login-email">Email</label>
+                                <input type="email" id="login-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Пароль</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Войти</button>
+                        </form>
+                        <p class="auth-switch">
+                            Нет аккаунта? <a href="#" onclick="showRegisterForm()">Зарегистрироваться</a>
+                        </p>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="register-form" class="auth-form hidden">
+                        <h2>Регистрация</h2>
+                        <form onsubmit="handleRegister(event)">
+                            <div class="form-group">
+                                <label for="register-username">Имя пользователя</label>
+                                <input type="text" id="register-username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-email">Email</label>
+                                <input type="email" id="register-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Пароль</label>
+                                <input type="password" id="register-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                        </form>
+                        <p class="auth-switch">
+                            Уже есть аккаунт? <a href="#" onclick="showLoginForm()">Войти</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profile-screen" class="screen hidden">
+            <div class="container">
+                <div class="card">
+                    <h2>Мой профиль</h2>
+                    <div id="profile-info" class="profile-info"></div>
+                    <button class="btn btn-secondary" onclick="showChangePassword()">Изменить пароль</button>
+                </div>
+
+                <!-- Change Password Modal -->
+                <div id="change-password-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <h3>Изменить пароль</h3>
+                        <form onsubmit="handleChangePassword(event)">
+                            <div class="form-group">
+                                <label for="current-password">Текущий пароль</label>
+                                <input type="password" id="current-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-password">Новый пароль</label>
+                                <input type="password" id="new-password" required>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="hideChangePassword()">Отмена</button>
+                                <button type="submit" class="btn btn-primary">Изменить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Screen (Admin only) -->
+        <div id="users-screen" class="screen hidden">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Управление пользователями</h2>
+                        <div class="filters">
+                            <select id="role-filter" onchange="loadUsers()">
+                                <option value="">Все роли</option>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <select id="sort-by" onchange="loadUsers()">
+                                <option value="">Без сортировки</option>
+                                <option value="created_at">По дате</option>
+                                <option value="username">По имени</option>
+                                <option value="role">По роли</option>
+                            </select>
+                            <select id="sort-order" onchange="loadUsers()">
+                                <option value="asc">По возрастанию</option>
+                                <option value="desc">По убыванию</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="users-table" class="users-table"></div>
+                    <div id="pagination" class="pagination"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit User Modal -->
+        <div id="edit-user-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Редактировать пользователя</h3>
+                <form onsubmit="handleUpdateUser(event)">
+                    <input type="hidden" id="edit-user-id">
+                    <div class="form-group">
+                        <label for="edit-username">Имя пользователя</label>
+                        <input type="text" id="edit-username">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">Email</label>
+                        <input type="email" id="edit-email">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-role">Роль</label>
+                        <select id="edit-role">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="edit-is-active">
+                            Активен
+                        </label>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="hideEditUserModal()">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

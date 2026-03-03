@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "coreservice"
+version = "0.1.0"
+description = ""
+authors = ["R-Kiselev <sputnavik@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "coreservice" }]
+
+[tool.poetry.dependencies]
+python = ">=3.13"
+django = "^5.1.7"
+djangorestframework = "^3.15.2"
+python-dotenv = "^1.1.0"
+psycopg2-binary = "^2.9.10"
+dependency-injector = "^4.46.0"
+requests = "^2.32.3"
+django-filter = "^25.1"
+celery = "^5.5.1"
+redis = "^5.2.1"
+confluent-kafka = "^2.9.0"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.1.0"
+black = "^25.1.0"
+flake8 = "^7.1.2"
+mypy = "^1.15.0"
+isort = "^6.0.1"
+pylint = "^3.3.6"
+pytest = "^8.3.5"
+pytest-django = "^4.10.0"
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]  # Adjust based on your Python version
+
+[tool.isort]
+profile = "black"
+line_length = 100  # Matches black's line-length
+multi_line_output = 3  # Vertical hanging indent, PEP 8 style
+include_trailing_comma = true  # Matches black compatibility
+known_local_folder = ["core", "projects", "tasks"]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["W503", "W504", "E302", "E203", "F405"]
+extend-exclude = ["*/__init__.py", "*alembic/*", "*migrations/*"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

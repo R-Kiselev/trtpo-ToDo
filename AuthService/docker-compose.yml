@@ -1,0 +1,30 @@
+services:
+  auth_db:
+    image: postgres:17
+    container_name: auth_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env
+  auth:
+    build: .
+    container_name: auth
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+
+volumes:
+  db-data:
+
+networks:
+# Temporary solution to avoid network issues
+  default:
+    driver: bridge

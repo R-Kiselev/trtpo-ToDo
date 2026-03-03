@@ -1,0 +1,135 @@
+services:
+  core_db:
+    image: postgres:17
+    container_name: core_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - coreservice/.env
+    networks:
+      - services_network
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: core
+    ports:
+      - "8001:8000"
+    entrypoint: ['bash', ../entrypoint.sh]
+    volumes:
+      - .:/app
+    depends_on:
+      core_db:
+        condition: service_healthy
+    env_file:
+      - coreservice/.env
+    networks:
+      - services_network
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - services_network
+  celery_worker:
+    container_name: celery_worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A coreservice worker --loglevel=info
+    env_file:
+      - coreservice/.env
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - core_db
+    networks:
+      - services_network
+
+  celery_beat:
+    container_name: celery_beat
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A coreservice beat --loglevel=info
+    env_file:
+      - coreservice/.env
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - core_db
+    networks:
+      - services_network
+
+  celery_flower:
+    container_name: celery_flower
+    image: mher/flower
+    command: celery -A celery flower --port=5555
+    env_file:
+      - coreservice/.env
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery_worker
+      - redis
+    networks:
+      - services_network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: [ "CMD", "nc", "-zv", "localhost", "2181" ]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+    networks:
+      - services_network
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      zookeeper:
+          condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "nc", "-zv", "localhost", "9092"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+    networks:
+      - services_network
+
+volumes:
+  db-data:
+
+networks:
+  services_network:
+    driver: bridge
+    external: true
