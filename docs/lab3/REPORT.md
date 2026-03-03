@@ -56,11 +56,11 @@ graph TD
     AuthAPI <--> AuthDB
     CoreAPI <--> CoreDB
     
-    CoreAPI --|Task Queue| Redis
+    CoreAPI -->|Task Queue| Redis
     Redis --> Workers
     
-    AuthAPI --|Events| Kafka
-    CoreAPI --|Events| Kafka
+    AuthAPI -->|Events| Kafka
+    CoreAPI -->|Events| Kafka
     
     CoreAPI -.->|JWT Verification| AuthAPI
     Workers --> SMTP["Email Service"]
